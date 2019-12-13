@@ -1,0 +1,4 @@
+# Set auto crlf for text file as default behavior, in case people don't have core.autocrlf set.
+* text=auto
+bin/* binary
+*.sh text eol=lf
