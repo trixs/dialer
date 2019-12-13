@@ -1,1 +1,1 @@
-from dialer import power_dialer
+__all__ = ['dialer']
