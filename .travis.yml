@@ -9,3 +9,4 @@ script:
   - pytest --cov=dialer --cov-fail-under=25 test
 
 # integration with coveralls seems to be tricky and left out of scope of this exercise
+# minor change to trigger a build
