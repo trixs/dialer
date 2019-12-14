@@ -6,6 +6,10 @@ install:
   - pip install -r requirements-dev.txt
 # command to run tests
 script:
-  - pytest --cov=dialer --cov-fail-under=25 test
+    - pylint-fail-under --fail_under 10.0 . dialer test
+    - pytest --cov=dialer --cov-fail-under=100 --cov-branch test
 
+# automated generation of documentation and publishing on Github Pages is out of scope
+# One can generate docs manually using a command below
+# cd docs && make html
 # integration with coveralls seems to be tricky and left out of scope for this exercise

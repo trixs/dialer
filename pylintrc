@@ -138,7 +138,7 @@ disable=print-statement,
         xreadlines-attribute,
         deprecated-sys-function,
         exception-escape,
-        comprehension-escape
+        comprehension-escape,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -182,7 +182,6 @@ max-nested-blocks=5
 # it will be considered as an explicit return statement and no message will be
 # printed.
 never-returning-functions=sys.exit
-
 
 [BASIC]
 
@@ -344,9 +343,9 @@ logging-modules=logging
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
-notes=FIXME,
-      XXX,
-      TODO
+notes=XXX,
+      TODO,
+      FIXME
 
 
 [SIMILARITIES]
