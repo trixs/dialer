@@ -32,8 +32,9 @@ class PowerDialer:
         self.dialing_service = dialing_service
         self.agent_id = agent_id
         self.agent_state = AgentState.UNAVAILABLE
-        self.current_lead = ''
-        self.is_logging_out = False
+        self.current_lead = '' # phone number of the current customer
+        self.is_logging_out = False # changed if agent indicates desire to logout during a call
+        self.threads = [] # array of threads started in connect method. It's used in unit tests
 
     def on_agent_login(self):
         '''
@@ -125,6 +126,10 @@ class PowerDialer:
         if conn_state == CallState.CONNECTED and call_data.connected_number == '':
             call_data.connected_number = phone_number
             should_signal = True
+        #else:
+        # in a real application if we connected to a customer we need to
+        # either connect to another agent, or terminate the call
+
         call_data.thread_counter = call_data.thread_counter - 1
         if call_data.thread_counter <= 0:
             should_signal = True
@@ -145,6 +150,7 @@ class PowerDialer:
             self.logger.error(msg)
             raise Exception(msg)
 
+        self.threads.clear()
         # We start multiple concurrent attempts, but there is a small chance
         # that all attempts will fail. Then we will start a new batch
         should_retry = True
@@ -164,7 +170,6 @@ class PowerDialer:
             if len(leads) > 0:
                 call_data = CallData()
                 self.agent_state = AgentState.WAITING
-                threads = []
                 call_data.thread_counter = len(leads)
                 # create one thread per lead number
                 for lead in leads:
@@ -172,7 +177,7 @@ class PowerDialer:
                         target=self.dialing_wrapper,
                         args=(lead, call_data)
                     )
-                    threads.append(thread)
+                    self.threads.append(thread)
                     thread.start()
                 call_data.event.wait()
                 if call_data.connected_number != '':

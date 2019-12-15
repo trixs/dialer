@@ -281,6 +281,14 @@ class TestPowerDialer(unittest.TestCase):
         self.assertEqual(dialer.agent_state, AgentState.BUSY)
         self.assertEqual(dialer.current_lead, '+12123334444')
 
+def wait_for_all_threads(dialer):
+    '''
+    helper utility
+    waits until all threads started in dialer.connect() terminate
+    '''
+    for thread in dialer.threads:
+        thread.join()
+
 class TestConcurrentConnections(unittest.TestCase):
     '''
     Tests concurrent aspects of optimistic dialing
@@ -302,8 +310,12 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.AVAILABLE)
-        self.assertEqual(dialer.current_lead, '')
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.AVAILABLE)
+            self.assertEqual(dialer.current_lead, '')
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
 
     def test_connect_two_leads_successfull(self):
         '''
@@ -317,8 +329,12 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.BUSY)
-        self.assertEqual(dialer.current_lead, '+12123334444')
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.BUSY)
+            self.assertEqual(dialer.current_lead, '+12123334444')
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
 
     def test_connect_two_leads_one_fails(self):
         '''
@@ -333,8 +349,12 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.BUSY)
-        self.assertEqual(dialer.current_lead, '+12123334449')
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.BUSY)
+            self.assertEqual(dialer.current_lead, '+12123334449')
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
 
     def test_connect_two_leads_one_throws(self):
         '''
@@ -349,12 +369,16 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.BUSY)
-        self.assertEqual(dialer.current_lead, '+12123334449')
-        logs = LogInspector.get_messages()
-        self.assertListEqual(logs, [
-            'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
-        ])
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.BUSY)
+            self.assertEqual(dialer.current_lead, '+12123334449')
+            logs = LogInspector.get_messages()
+            self.assertListEqual(logs, [
+                'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
+            ])
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
 
     def test_connect_two_leads_fail_should_try_third(self):
         '''
@@ -370,12 +394,16 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.BUSY)
-        self.assertEqual(dialer.current_lead, '+12123334447')
-        logs = LogInspector.get_messages()
-        self.assertListEqual(logs, [
-            'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
-        ])
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.BUSY)
+            self.assertEqual(dialer.current_lead, '+12123334447')
+            logs = LogInspector.get_messages()
+            self.assertListEqual(logs, [
+                'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
+            ])
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
 
     def test_connect_all_leads_fail(self):
         '''
@@ -391,9 +419,13 @@ class TestConcurrentConnections(unittest.TestCase):
         dialer = PowerDialer(DatabaseStub(ctx), DialingServiceStub(ctx), 'agent1')
         dialer.on_agent_login()
         dialer.connect()
-        self.assertEqual(dialer.agent_state, AgentState.AVAILABLE)
-        self.assertEqual(dialer.current_lead, '')
-        logs = LogInspector.get_messages()
-        self.assertListEqual(logs, [
-            'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
-        ])
+        def validate():
+            self.assertEqual(dialer.agent_state, AgentState.AVAILABLE)
+            self.assertEqual(dialer.current_lead, '')
+            logs = LogInspector.get_messages()
+            self.assertListEqual(logs, [
+                'Dialing "+12123334444" for agent "agent1" failed. Error: "Dialing service failed"'
+            ])
+        validate() # validate immediately after connect
+        wait_for_all_threads(dialer)
+        validate() # re-validate after all threads terminate
